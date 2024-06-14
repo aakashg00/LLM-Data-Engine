@@ -1,17 +1,17 @@
 "use client";
 
 import React from "react";
-import DashboardHome from "../_components/Dashboard/DashboardHome";
 import Layout from "../_components/Dashboard/Layout";
+import SettingsPage from "../_components/SettingsPage";
 
-function DashboardPage() {
+function Settings() {
   return (
     <div className="bg-gray-50 dark:bg-neutral-900">
       <Layout>
-        <DashboardHome />
+        <SettingsPage />
       </Layout>
     </div>
   );
 }
 
-export default DashboardPage;
+export default Settings;

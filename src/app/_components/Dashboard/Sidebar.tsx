@@ -1,13 +1,28 @@
 import React, { useState } from "react";
-import Link from "next/link";
 import { Home, Settings, SquarePen, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "~/components/ui/sheet";
 import { Button } from "~/components/ui/button";
+import { useRouter, usePathname } from "next/navigation";
 
 function Sidebar() {
+  const pathname = usePathname().substring(1);
+  console.log(pathname);
+
   const [selectedPage, setSelectedPage] = useState<
     "dashboard" | "settings" | "prompts"
-  >("dashboard");
+  >(
+    pathname === "dashboard" ||
+      pathname === "settings" ||
+      pathname === "prompts"
+      ? pathname
+      : "dashboard",
+  );
+  const router = useRouter();
+
+  const switchPage = (page: "dashboard" | "settings" | "prompts") => {
+    setSelectedPage(page);
+    router.push(`/${page}`);
+  };
 
   return (
     <>
@@ -23,39 +38,36 @@ function Sidebar() {
           </header>
           <hr></hr>
           <div className="my-4">
-            <Link
-              href="/dashboard"
-              onClick={() => setSelectedPage("dashboard")}
+            <div
+              onClick={() => switchPage("dashboard")}
               className={
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-primary transition-all hover:text-primary" +
+                "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-primary transition-all hover:text-primary" +
                 (selectedPage === "dashboard" ? " bg-muted" : "")
               }
             >
               <Home className="h-4 w-4" />
               Dashboard
-            </Link>
-            <Link
-              href="/prompts"
-              onClick={() => setSelectedPage("prompts")}
+            </div>
+            <div
+              onClick={() => switchPage("prompts")}
               className={
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-primary transition-all hover:text-primary" +
+                "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-primary transition-all hover:text-primary" +
                 (selectedPage === "prompts" ? " bg-muted" : "")
               }
             >
               <SquarePen className="h-4 w-4" />
               Prompts
-            </Link>
-            <Link
-              href="#"
-              onClick={() => setSelectedPage("settings")}
+            </div>
+            <div
+              onClick={() => switchPage("settings")}
               className={
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-primary transition-all hover:text-primary" +
+                "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-primary transition-all hover:text-primary" +
                 (selectedPage === "settings" ? " bg-muted" : "")
               }
             >
               <Settings className="h-4 w-4" />
               Settings
-            </Link>
+            </div>
           </div>
           <hr></hr>
         </div>
@@ -80,27 +92,36 @@ function Sidebar() {
                 </header>
                 <hr></hr>
                 <div className="my-4">
-                  <Link
-                    href="/dashboard"
-                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-primary transition-all hover:text-primary"
+                  <div
+                    onClick={() => switchPage("dashboard")}
+                    className={
+                      "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-primary transition-all hover:text-primary" +
+                      (selectedPage === "dashboard" ? " bg-muted" : "")
+                    }
                   >
                     <Home className="h-4 w-4" />
                     Dashboard
-                  </Link>
-                  <Link
-                    href="/prompts"
-                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-primary transition-all hover:text-primary"
+                  </div>
+                  <div
+                    onClick={() => switchPage("prompts")}
+                    className={
+                      "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-primary transition-all hover:text-primary" +
+                      (selectedPage === "prompts" ? " bg-muted" : "")
+                    }
                   >
                     <SquarePen className="h-4 w-4" />
                     Prompts
-                  </Link>
-                  <Link
-                    href="#"
-                    className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2 text-primary transition-all hover:text-primary"
+                  </div>
+                  <div
+                    onClick={() => switchPage("settings")}
+                    className={
+                      "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-primary transition-all hover:text-primary" +
+                      (selectedPage === "settings" ? " bg-muted" : "")
+                    }
                   >
                     <Settings className="h-4 w-4" />
                     Settings
-                  </Link>
+                  </div>
                 </div>
                 <hr></hr>
               </div>

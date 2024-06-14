@@ -29,7 +29,11 @@ type Levels = 1 | 2 | 3;
 
 type Props = {
   text: string | undefined;
-  submit: (text: string | undefined, changed: boolean) => void;
+  submit: (
+    text: string | undefined,
+    ogText: string | undefined,
+    changed: boolean,
+  ) => void;
 };
 
 export default function Tiptap({ text, submit }: Props) {
@@ -135,7 +139,7 @@ export default function Tiptap({ text, submit }: Props) {
     // Compare the strings
     const changed = markdownText !== compareText;
 
-    submit(markdownText, changed);
+    submit(markdownText, compareText, changed);
   }
 
   return (

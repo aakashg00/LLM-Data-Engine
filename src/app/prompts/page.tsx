@@ -1,17 +1,17 @@
 "use client";
 
 import React from "react";
-import DashboardHome from "../_components/Dashboard/DashboardHome";
 import Layout from "../_components/Dashboard/Layout";
+import PromptsPage from "../_components/PromptsPage";
 
-function DashboardPage() {
+function Prompts() {
   return (
     <div className="bg-gray-50 dark:bg-neutral-900">
       <Layout>
-        <DashboardHome />
+        <PromptsPage />
       </Layout>
     </div>
   );
 }
 
-export default DashboardPage;
+export default Prompts;

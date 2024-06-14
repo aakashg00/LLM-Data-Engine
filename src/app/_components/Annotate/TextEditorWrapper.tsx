@@ -5,7 +5,11 @@ import type { AnnotationType } from "./AnnotatePage";
 
 type Props = {
   text: string | undefined;
-  submit: (text: string | undefined, changed: boolean) => void;
+  submit: (
+    text: string | undefined,
+    ogText: string | undefined,
+    changed: boolean,
+  ) => void;
   type: AnnotationType;
 };
 

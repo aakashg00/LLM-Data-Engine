@@ -16,7 +16,7 @@ import { Button } from "~/components/ui/button";
 import { toast } from "react-hot-toast";
 import Layout from "./Layout";
 import { Textarea } from "~/components/ui/textarea";
-import { MessageCircleQuestion, Plus } from "lucide-react";
+import { HelpCircle, MessageCircleQuestion, Plus } from "lucide-react";
 import Link from "next/link";
 
 export type DashboardProject = {
@@ -116,157 +116,155 @@ function DashboardHome() {
   };
 
   return (
-    <Layout>
-      <div>
-        <main id="content" role="main" className="md:ps-[260px]">
-          <div className="flex min-h-screen flex-col space-y-5 p-5">
-            {/* Page Header  */}
-            <div className="flex items-center justify-between gap-x-5">
-              <h2 className="inline-block text-lg font-semibold text-gray-800 dark:text-neutral-200">
-                Dashboard
-              </h2>
+    <div>
+      <main id="content" role="main" className="md:ps-[260px]">
+        <div className="flex min-h-screen flex-col space-y-5 p-5">
+          {/* Page Header  */}
+          <div className="flex h-10 items-center justify-between gap-x-5">
+            <h2 className="inline-block text-lg font-semibold text-gray-800 dark:text-neutral-200">
+              Dashboard
+            </h2>
 
-              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogTrigger asChild>
-                  <Button
-                    onClick={handlePressedCreate}
-                    variant="default"
-                    size="icon"
-                  >
-                    <Plus />
-                  </Button>
-                  {/* <button
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  onClick={handlePressedCreate}
+                  variant="default"
+                  size="icon"
+                >
+                  <Plus />
+                </Button>
+                {/* <button
               className="mt-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
              
             >
               
             </button> */}
-                </DialogTrigger>
-                <DialogContent className="max-h-screen overflow-y-scroll sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle>Create a project.</DialogTitle>
-                    <DialogDescription>
-                      Write a name and description for your project.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="flex flex-col gap-3 overflow-auto">
-                    <Label
-                      htmlFor="projectName"
-                      // className="-mb-3 block text-sm font-medium text-gray-700"
+              </DialogTrigger>
+              <DialogContent className="max-h-screen overflow-y-scroll sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Create a project.</DialogTitle>
+                  <DialogDescription>
+                    Write a name and description for your project.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex flex-col gap-3 overflow-auto">
+                  <Label
+                    htmlFor="projectName"
+                    // className="-mb-3 block text-sm font-medium text-gray-700"
+                  >
+                    Project Name
+                  </Label>
+                  <Input
+                    type="text"
+                    name="projectName"
+                    id="projectName"
+                    className="col-span-3 -mt-2"
+                    // className="w-full rounded-md border border-gray-300 p-2 text-sm text-slate-700"
+                    value={projectName}
+                    onChange={(e) => setProjectName(e.target.value)}
+                  />
+                  <Label
+                    htmlFor="description"
+                    // className="-mb-3 block text-sm font-medium text-gray-700"
+                  >
+                    Description
+                  </Label>
+                  <Textarea
+                    name="description"
+                    id="description"
+                    className="h-22 -mt-2 min-h-14 w-full rounded-md border border-gray-300 bg-white p-2 text-sm"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
+                  <Label
+                    htmlFor="publickey"
+                    className="flex items-center gap-1"
+                  >
+                    Langfuse Public Key
+                    <Link
+                      href="https://langfuse.com/docs/get-started"
+                      rel="noopener noreferrer"
+                      target="_blank"
                     >
-                      Project Name
-                    </Label>
-                    <Input
-                      type="text"
-                      name="projectName"
-                      id="projectName"
-                      className="col-span-3 -mt-2"
-                      // className="w-full rounded-md border border-gray-300 p-2 text-sm text-slate-700"
-                      value={projectName}
-                      onChange={(e) => setProjectName(e.target.value)}
-                    />
-                    <Label
-                      htmlFor="description"
-                      // className="-mb-3 block text-sm font-medium text-gray-700"
+                      <HelpCircle
+                        className="text-gray-600 hover:cursor-pointer"
+                        size={12}
+                      />
+                    </Link>
+                  </Label>
+                  <Input
+                    type="text"
+                    name="publickey"
+                    id="publickey"
+                    className="col-span-3 -mt-2"
+                    // className="w-full rounded-md border border-gray-300 p-2 text-sm text-slate-700"
+                    value={publicKey}
+                    onChange={(e) => setPublicKey(e.target.value)}
+                  />
+                  <Label
+                    htmlFor="secretkey"
+                    className="flex items-center gap-1"
+                  >
+                    Langfuse Secret Key
+                    <Link
+                      href="https://langfuse.com/docs/get-started"
+                      rel="noopener noreferrer"
+                      target="_blank"
                     >
-                      Description
-                    </Label>
-                    <Textarea
-                      name="description"
-                      id="description"
-                      className="h-22 -mt-2 min-h-14 w-full rounded-md border border-gray-300 bg-white p-2 text-sm"
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                    />
-                    <Label
-                      htmlFor="publickey"
-                      className="flex items-center gap-1"
-                    >
-                      Langfuse Public Key
-                      <Link
-                        href="https://langfuse.com/docs/get-started"
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      >
-                        <MessageCircleQuestion
-                          className="text-gray-600 hover:cursor-pointer"
-                          size={12}
-                        />
-                      </Link>
-                    </Label>
-                    <Input
-                      type="text"
-                      name="publickey"
-                      id="publickey"
-                      className="col-span-3 -mt-2"
-                      // className="w-full rounded-md border border-gray-300 p-2 text-sm text-slate-700"
-                      value={publicKey}
-                      onChange={(e) => setPublicKey(e.target.value)}
-                    />
-                    <Label
-                      htmlFor="secretkey"
-                      className="flex items-center gap-1"
-                    >
-                      Langfuse Secret Key
-                      <Link
-                        href="https://langfuse.com/docs/get-started"
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      >
-                        <MessageCircleQuestion
-                          className="text-gray-600 hover:cursor-pointer"
-                          size={12}
-                        />
-                      </Link>
-                    </Label>
-                    <Input
-                      type="text"
-                      name="secretkey"
-                      id="secretkey"
-                      className="col-span-3 -mt-2"
-                      // className="w-full rounded-md border border-gray-300 p-2 text-sm text-slate-700"
-                      value={secretKey}
-                      onChange={(e) => setSecretKey(e.target.value)}
-                    />
-                  </div>
-                  <DialogFooter>
-                    {/* <Button type="submit">Save changes</Button> */}
-                    <Button
-                      // className="mt-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-                      onClick={() =>
-                        toast.promise(handleClickedSubmit(), {
-                          loading: "Creating project...",
-                          success: "Success!",
-                          error: (err: Error) => <p>{err.message}</p>,
-                        })
-                      }
-                    >
-                      Submit
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
-            {/* End Page Header  */}
-            {projects && projects.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
-                {(projects ?? []).map((project) => (
-                  <ProjectTile key={project.id} project={project} />
-                ))}
-              </div>
-            ) : (
-              !loading && (
-                <div className="flex justify-center">
-                  <h2 className="flex items-center pt-12 text-3xl">
-                    Create your first project!
-                  </h2>
+                      <HelpCircle
+                        className="text-gray-600 hover:cursor-pointer"
+                        size={12}
+                      />
+                    </Link>
+                  </Label>
+                  <Input
+                    type="text"
+                    name="secretkey"
+                    id="secretkey"
+                    className="col-span-3 -mt-2"
+                    // className="w-full rounded-md border border-gray-300 p-2 text-sm text-slate-700"
+                    value={secretKey}
+                    onChange={(e) => setSecretKey(e.target.value)}
+                  />
                 </div>
-              )
-            )}
+                <DialogFooter>
+                  {/* <Button type="submit">Save changes</Button> */}
+                  <Button
+                    // className="mt-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                    onClick={() =>
+                      toast.promise(handleClickedSubmit(), {
+                        loading: "Creating project...",
+                        success: "Success!",
+                        error: (err: Error) => <p>{err.message}</p>,
+                      })
+                    }
+                  >
+                    Submit
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
-        </main>
-      </div>
-    </Layout>
+          {/* End Page Header  */}
+          {projects && projects.length > 0 ? (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
+              {(projects ?? []).map((project) => (
+                <ProjectTile key={project.id} project={project} />
+              ))}
+            </div>
+          ) : (
+            !loading && (
+              <div className="flex justify-center">
+                <h2 className="flex items-center pt-12 text-3xl">
+                  Create your first project!
+                </h2>
+              </div>
+            )
+          )}
+        </div>
+      </main>
+    </div>
   );
 }
 

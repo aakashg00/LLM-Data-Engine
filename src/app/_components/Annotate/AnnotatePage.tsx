@@ -17,6 +17,7 @@ import { Conversation, Message, Project } from "@prisma/client";
 import type { Langfuse } from "langfuse";
 
 import toast from "react-hot-toast";
+import { userAgent } from "next/server";
 
 export type AnnotationType = "EDIT" | "TAG" | "BOTH";
 
@@ -319,9 +320,11 @@ function AnnotatePage(props: Props) {
         <TextEditorWrapper
           text={text ?? ""}
           type={"TAG"}
-          submit={(text: string | undefined, changed: boolean) =>
-            submitEditResponse(text, changed)
-          }
+          submit={(
+            text: string | undefined,
+            ogText: string | undefined,
+            changed: boolean,
+          ) => submitEditResponse(text, ogText, changed)}
           key={`text-editor-${allComponents.length}` + props.idx}
         />,
       ]);
@@ -331,9 +334,11 @@ function AnnotatePage(props: Props) {
         <TextEditorWrapper
           text={text ?? ""}
           type={"EDIT"}
-          submit={(text: string | undefined, changed: boolean) =>
-            submitEditResponse(text, changed)
-          }
+          submit={(
+            text: string | undefined,
+            ogText: string | undefined,
+            changed: boolean,
+          ) => submitEditResponse(text, ogText, changed)}
           key={`text-editor-${allComponents.length}` + props.idx}
         />,
       ]);
@@ -375,9 +380,11 @@ function AnnotatePage(props: Props) {
         <TextEditorWrapper
           text={text ?? ""}
           type={"TAG"}
-          submit={(text: string | undefined, changed: boolean) =>
-            submitEditResponse(text, changed)
-          }
+          submit={(
+            text: string | undefined,
+            ogText: string | undefined,
+            changed: boolean,
+          ) => submitEditResponse(text, ogText, changed)}
           key={`text-editor-${allComponents.length}` + props.idx}
         />,
       ]);
@@ -387,9 +394,11 @@ function AnnotatePage(props: Props) {
         <TextEditorWrapper
           text={text ?? ""}
           type={"EDIT"}
-          submit={(text: string | undefined, changed: boolean) =>
-            submitEditResponse(text, changed)
-          }
+          submit={(
+            text: string | undefined,
+            ogText: string | undefined,
+            changed: boolean,
+          ) => submitEditResponse(text, ogText, changed)}
           key={`text-editor-${allComponents.length}` + props.idx}
         />,
       ]);
@@ -557,6 +566,7 @@ function AnnotatePage(props: Props) {
 
   const submitEditResponse = async (
     text: string | undefined,
+    ogText: string | undefined,
     changed: boolean,
   ) => {
     try {
@@ -606,7 +616,8 @@ function AnnotatePage(props: Props) {
               traceId: latestTraceId.current,
               parentObservationId: latestSpanId.current,
               name: "User edited AI response",
-              input: { content: messages }, // change to original unedited message content
+              input: { original: ogText },
+              output: { edited: text },
               projectId: props.projectId,
             }),
           }),
@@ -618,6 +629,7 @@ function AnnotatePage(props: Props) {
             body: JSON.stringify({
               id: latestTraceId.current,
               tags: ["edited"],
+              metadata: { edited: true },
               projectId: props.projectId,
             }),
           }),
@@ -681,12 +693,14 @@ function AnnotatePage(props: Props) {
       console.error("Error saving message:", error);
     }
 
-    const simplifiedMessages = messagesRef.current.map(({ role, content }) => ({
-      role,
-      content,
-    }));
+    // for all previous messages as trace input:
 
-    simplifiedMessages.push({ role: "user", content: text });
+    // const simplifiedMessages = messagesRef.current.map(({ role, content }) => ({
+    //   role,
+    //   content,
+    // }));
+
+    // simplifiedMessages.push({ role: "user", content: text });
 
     const response = await fetch("/api/langfuse/trace", {
       method: "POST",
@@ -695,7 +709,7 @@ function AnnotatePage(props: Props) {
       },
       body: JSON.stringify({
         name: "my-trace",
-        input: simplifiedMessages,
+        input: { role: "user", content: text },
         sessionId: sessionId.current,
         projectId: props.projectId,
       }),
