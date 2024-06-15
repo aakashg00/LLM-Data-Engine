@@ -29,7 +29,7 @@ export async function POST(req: Request) {
         name: "my-generation",
         model: "gpt-3.5-turbo",
         modelParameters: {
-          temperature: 1.4,
+          temperature: 1.3,
           top_p: 1,
         },
         input: messages,
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
         model: "gpt-3.5-turbo",
         stream: true,
         messages,
-        temperature: 1.4,
+        temperature: 1.3,
         top_p: 1,
       });
 

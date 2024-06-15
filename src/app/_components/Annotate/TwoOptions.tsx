@@ -120,8 +120,11 @@ function TwoOptions(props: Props) {
   }
 
   async function choseBothBad() {
-    setBothBadCount((prevCount) => prevCount + 1);
-    setIsModalOpen(true);
+    if (!isLoading && !isLoading2) {
+      setBothBadSelected(true);
+      setBothBadCount((prevCount) => prevCount + 1);
+      setIsModalOpen(true);
+    }
   }
 
   async function submitFeedback() {
@@ -133,7 +136,6 @@ function TwoOptions(props: Props) {
       props.tooManyRejections(feedback);
       return;
     }
-    setBothBadSelected(false);
     setOneText("");
     setTwoText("");
     setFeedback("");
@@ -162,6 +164,12 @@ function TwoOptions(props: Props) {
       setTwoText(messages2?.at(message2Index)?.content);
     }
   }, [messages2]);
+
+  useEffect(() => {
+    if (isLoading || isLoading2) {
+      setBothBadSelected(false);
+    }
+  }, [isLoading, isLoading2]);
 
   return (
     <Card className="mx-auto flex w-full flex-col gap-1 p-4 dark:border-gray-700 dark:bg-slate-900 dark:shadow-slate-700/[.7] md:p-5">
@@ -266,15 +274,12 @@ function TwoOptions(props: Props) {
               sessionEnded
             )
               ? " cursor-pointer"
-              : "")
+              : " opacity-80")
           }
         >
           Both options are inadequate.
         </p>
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          {/* <DialogTrigger asChild>
-              
-            </DialogTrigger> */}
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Why were both responses inadequate?</DialogTitle>

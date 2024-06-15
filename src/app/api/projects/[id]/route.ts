@@ -79,3 +79,64 @@ export async function PUT(
     return NextResponse.error();
   }
 }
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } },
+) {
+  const id = params.id;
+
+  try {
+    // Find all messages associated with conversations belonging to the project
+    const messages = await client.message.findMany({
+      where: {
+        conversation: {
+          projectId: id,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    // Extract message IDs from the found messages
+    const messageIds = messages.map((message) => message.id);
+
+    // Delete AI responses associated with the found message IDs
+    await client.aI_Response.deleteMany({
+      where: {
+        messageId: {
+          in: messageIds,
+        },
+      },
+    });
+
+    // Delete messages associated with the found conversation IDs
+    await client.message.deleteMany({
+      where: {
+        id: {
+          in: messageIds,
+        },
+      },
+    });
+
+    // Delete conversations associated with the project
+    await client.conversation.deleteMany({
+      where: {
+        projectId: id,
+      },
+    });
+
+    // Delete the project itself
+    await client.project.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({
+      message: "Project and associated data deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting project and associated data:", error);
+    return NextResponse.error();
+  }
+}

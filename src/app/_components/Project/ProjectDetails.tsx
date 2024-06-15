@@ -10,6 +10,16 @@ import { Button } from "~/components/ui/button";
 import { Label } from "~/components/ui/label";
 import { Input } from "~/components/ui/input";
 import { Checkbox } from "~/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "~/components/ui/dialog";
+import { useRouter } from "next/navigation";
 
 import type { Project, Tag } from "@prisma/client";
 import toast from "react-hot-toast";
@@ -18,6 +28,7 @@ import { useState, useRef } from "react";
 
 import type { AnnotationType } from "../Annotate/AnnotatePage";
 import TagSelect, { TagNoID } from "./TagSelect";
+import { router } from "@trpc/server";
 
 export interface ProjectBody {
   id: string;
@@ -30,13 +41,13 @@ export interface ProjectBody {
   // tags: TagNoID[];
 }
 interface Props {
-  project: ProjectBody;
+  project: Project;
   setProject: React.Dispatch<React.SetStateAction<Project | null>>;
 }
 
 const ProjectDetails: React.FC<Props> = ({ project, setProject }: Props) => {
   const updateName = (newName: string) => {
-    const updatedProject: ProjectBody = { ...project, name: newName };
+    const updatedProject: Project = { ...project, name: newName };
     setProject(updatedProject);
   };
 
@@ -107,6 +118,8 @@ const ProjectDetails: React.FC<Props> = ({ project, setProject }: Props) => {
     setTimeout(() => setCopied(false), 2000); // Reset copied state after 2 seconds
   };
 
+  const router = useRouter();
+
   const submitSaveChanges = async () => {
     if (
       checkboxValues.current.tag === false &&
@@ -133,6 +146,29 @@ const ProjectDetails: React.FC<Props> = ({ project, setProject }: Props) => {
       throw new Error("Failed to create project.");
     }
   };
+
+  async function deleteProject() {
+    try {
+      const response = await fetch(`/api/projects/${project.id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete project");
+      }
+    } catch (error) {
+      throw new Error("Faield to delete project");
+    }
+  }
+
+  function handleDeleteProjectClick() {
+    void toast.promise(deleteProject(), {
+      loading: "Deleting project...",
+      success: "Project deleted successfully!",
+      error: (err) => <p>{err}</p>,
+    });
+    router.push("/dashboard");
+  }
 
   return (
     <>
@@ -277,20 +313,36 @@ const ProjectDetails: React.FC<Props> = ({ project, setProject }: Props) => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            Delete Project{" "}
-            <Button
-              variant="destructive"
-              className="px-8"
-              onClick={() =>
-                toast.promise(submitSaveChanges(), {
-                  loading: "Saving changes...",
-                  success: "Success!",
-                  error: (err: Error) => <p>{err.message}</p>,
-                })
-              }
-            >
-              Delete
-            </Button>
+            Delete Project
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="destructive" className="px-8">
+                  Delete
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle className="mb-1">
+                    Are you sure you want to delete?
+                  </DialogTitle>
+                  <DialogDescription>
+                    <p className="mb-2">
+                      Deleting a project is final and cannot be undone.
+                    </p>
+                  </DialogDescription>
+                </DialogHeader>
+
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={handleDeleteProjectClick}
+                  >
+                    Delete
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </CardTitle>
         </CardHeader>
       </Card>

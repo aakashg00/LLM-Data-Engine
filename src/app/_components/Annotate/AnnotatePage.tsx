@@ -18,6 +18,7 @@ import type { Langfuse } from "langfuse";
 
 import toast from "react-hot-toast";
 import { userAgent } from "next/server";
+import TextAnnotateWrapper from "./TextAnnotateWrapper";
 
 export type AnnotationType = "EDIT" | "TAG" | "BOTH";
 
@@ -314,12 +315,11 @@ function AnnotatePage(props: Props) {
       }),
     });
 
-    if (props.type !== "EDIT") {
+    if (props.type == "EDIT") {
       setAllComponents((prevComponents) => [
         ...prevComponents,
         <TextEditorWrapper
           text={text ?? ""}
-          type={"TAG"}
           submit={(
             text: string | undefined,
             ogText: string | undefined,
@@ -331,15 +331,21 @@ function AnnotatePage(props: Props) {
     } else {
       setAllComponents((prevComponents) => [
         ...prevComponents,
-        <TextEditorWrapper
+        <TextAnnotateWrapper
           text={text ?? ""}
-          type={"EDIT"}
           submit={(
-            text: string | undefined,
-            ogText: string | undefined,
-            changed: boolean,
-          ) => submitEditResponse(text, ogText, changed)}
-          key={`text-editor-${allComponents.length}` + props.idx}
+            annotations: Record<
+              string,
+              { start: number; end: number; text?: string | undefined }[]
+            >,
+          ) =>
+            submitAnnotateResponse(
+              annotations,
+              text ?? "",
+              latestGen1Id.current ?? "",
+            )
+          }
+          key={`text-annotator-${allComponents.length}` + props.idx}
         />,
       ]);
     }
@@ -374,12 +380,11 @@ function AnnotatePage(props: Props) {
       }),
     });
 
-    if (props.type !== "EDIT") {
+    if (props.type == "EDIT") {
       setAllComponents((prevComponents) => [
         ...prevComponents,
         <TextEditorWrapper
           text={text ?? ""}
-          type={"TAG"}
           submit={(
             text: string | undefined,
             ogText: string | undefined,
@@ -391,15 +396,21 @@ function AnnotatePage(props: Props) {
     } else {
       setAllComponents((prevComponents) => [
         ...prevComponents,
-        <TextEditorWrapper
+        <TextAnnotateWrapper
           text={text ?? ""}
-          type={"EDIT"}
           submit={(
-            text: string | undefined,
-            ogText: string | undefined,
-            changed: boolean,
-          ) => submitEditResponse(text, ogText, changed)}
-          key={`text-editor-${allComponents.length}` + props.idx}
+            annotations: Record<
+              string,
+              { start: number; end: number; text?: string | undefined }[]
+            >,
+          ) =>
+            submitAnnotateResponse(
+              annotations,
+              text ?? "",
+              latestGen2Id.current ?? "",
+            )
+          }
+          key={`text-annotator-${allComponents.length}` + props.idx}
         />,
       ]);
     }
@@ -534,34 +545,114 @@ function AnnotatePage(props: Props) {
     }
   }
 
-  const submitTagResponse = async (tags: JSON) => {
+  const submitAnnotateResponse = async (
+    annotations: Record<
+      string,
+      { start: number; end: number; text?: string | undefined }[]
+    >,
+    text: string,
+    genId: string,
+  ) => {
     try {
-      // edit empty message with new edited content
-      const res = await fetch(`/api/messages/${currentMessageIdRef.current}`, {
-        method: "PATCH",
+      await fetch("/api/langfuse/generation", {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          tags,
+          id: genId,
+          traceId: latestTraceId.current,
+          metadata: { annotations },
+          projectId: props.projectId,
         }),
       });
+      if (Object.keys(annotations).length > 0) {
+        await fetch("/api/langfuse/event", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            traceId: latestTraceId.current,
+            parentObservationId: latestSpanId.current,
+            name: "User added annotations",
+            input: { text, generationId: genId },
+            output: { annotations },
+            projectId: props.projectId,
+          }),
+        });
+      }
 
-      if (!res.ok) {
-        throw new Error("Failed to update message");
+      if (props.type == "BOTH") {
+        setAllComponents((prevComponents) => [
+          ...prevComponents,
+          <TextEditorWrapper
+            text={text ?? ""}
+            submit={(
+              text: string | undefined,
+              ogText: string | undefined,
+              changed: boolean,
+            ) => submitEditResponse(text, ogText, changed)}
+            key={`text-editor-${allComponents.length}` + props.idx}
+          />,
+        ]);
+      } else {
+        try {
+          // edit empty message with new edited content
+          const res = await fetch(
+            `/api/messages/${currentMessageIdRef.current}`,
+            {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                tags: annotations,
+              }),
+            },
+          );
+
+          if (!res.ok) {
+            throw new Error("Failed to update message");
+          }
+
+          const responseData = (await res.json()) as Message;
+
+          const newMessage: AIMessage = {
+            content: text ?? "",
+            role: "assistant",
+            id: responseData.id,
+          };
+
+          await fetch("/api/langfuse/trace", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              id: latestTraceId.current,
+              output: { role: newMessage.role, content: newMessage.content },
+              projectId: props.projectId,
+            }),
+          });
+
+          replaceLastMessage1(newMessage);
+          replaceLastMessage2(newMessage);
+          setAllComponents((prevComponents) => [
+            ...prevComponents,
+            <UserResponse
+              submitCont={(text: string) => submitUserContinue(text)}
+              submitEnd={submitUserEnd}
+              key={`user-response-${allComponents.length}` + props.idx}
+            />,
+          ]);
+        } catch (error) {
+          console.error("Error saving message:", error);
+        }
       }
     } catch (error) {
       console.error("Error saving message:", error);
     }
-
-    setAllComponents((prevComponents) => [
-      ...prevComponents,
-      <UserResponse
-        submitCont={(text: string) => submitUserContinue(text)}
-        submitEnd={submitUserEnd}
-        key={`user-response-${allComponents.length}` + props.idx}
-      />,
-    ]);
   };
 
   const submitEditResponse = async (
@@ -616,8 +707,8 @@ function AnnotatePage(props: Props) {
               traceId: latestTraceId.current,
               parentObservationId: latestSpanId.current,
               name: "User edited AI response",
-              input: { original: ogText },
-              output: { edited: text },
+              input: { message: ogText },
+              output: { message: text },
               projectId: props.projectId,
             }),
           }),
