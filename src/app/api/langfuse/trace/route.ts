@@ -4,17 +4,27 @@ import { NextResponse } from "next/server";
 export async function POST(request: Request) {
   try {
     const data = (await request.json()) as unknown;
-    const { id, name, input, output, sessionId, metadata, tags, projectId } =
-      data as {
-        id?: string;
-        name?: string;
-        input?: unknown;
-        output?: unknown;
-        sessionId?: string;
-        metadata?: Record<string, unknown>;
-        tags?: string[];
-        projectId: string;
-      };
+    const {
+      id,
+      name,
+      input,
+      output,
+      sessionId,
+      metadata,
+      tags,
+      userId,
+      projectId,
+    } = data as {
+      id?: string;
+      name?: string;
+      input?: unknown;
+      output?: unknown;
+      sessionId?: string;
+      metadata?: Record<string, unknown>;
+      tags?: string[];
+      userId?: string;
+      projectId: string;
+    };
     const langfuse = await getLangfuseClient(projectId);
 
     if (!langfuse) {
@@ -28,6 +38,7 @@ export async function POST(request: Request) {
         output,
         metadata,
         tags,
+        userId,
         sessionId,
       });
       await langfuse.shutdownAsync();

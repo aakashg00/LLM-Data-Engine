@@ -22,6 +22,10 @@ export async function GET(
       where: {
         id,
       },
+      include: {
+        systemPrompts: true,
+        users: true,
+      },
     });
 
     if (!project) {
@@ -46,11 +50,10 @@ export async function PUT(
     const { name, systemPrompts, description, annotation, instructions } =
       (await req.json()) as {
         name: string;
-        systemPrompts: string[];
+        systemPrompts: { title: string; body: string }[];
         description: string;
         annotation: AnnotationType;
         instructions: string;
-        // tags: Tag[];
       };
 
     // tags.map((tag) => ({
@@ -65,12 +68,18 @@ export async function PUT(
       where: { id },
       data: {
         name,
-        systemPrompts,
         description,
         annotation,
         instructions,
+        systemPrompts: {
+          deleteMany: {}, // Remove all existing system prompts
+          create: systemPrompts.map((prompt) => ({
+            title: prompt.title,
+            body: prompt.body,
+          })),
+        },
       },
-      // include: { tags: true }, // Include tags in the response
+      include: { systemPrompts: true },
     });
 
     return NextResponse.json(updatedProject);
@@ -122,6 +131,13 @@ export async function DELETE(
 
     // Delete conversations associated with the project
     await client.conversation.deleteMany({
+      where: {
+        projectId: id,
+      },
+    });
+
+    // Delete system prompts associated with the project
+    await client.systemPrompt.deleteMany({
       where: {
         projectId: id,
       },

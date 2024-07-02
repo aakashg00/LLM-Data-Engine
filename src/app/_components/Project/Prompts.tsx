@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import type { Project } from "@prisma/client";
+import type { Project, SystemPrompt } from "@prisma/client";
 import { Label } from "~/components/ui/label";
 import { Trash2, Plus } from "lucide-react";
 import {
@@ -12,10 +12,12 @@ import {
 } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import toast from "react-hot-toast";
+import pageAccessHOC from "../PageAccess";
+import { ProjectBody } from "~/app/projects/[id]/page";
 
 interface Props {
-  project: Project;
-  setProject: React.Dispatch<React.SetStateAction<Project | null>>;
+  project: ProjectBody;
+  setProject: React.Dispatch<React.SetStateAction<ProjectBody | null>>;
 }
 
 function Prompts({ project, setProject }: Props) {
@@ -30,20 +32,35 @@ function Prompts({ project, setProject }: Props) {
     setProject(updatedProject);
   };
 
-  const handleSystemPromptChange = (index: number, value: string) => {
+  const handleSystemPromptTitleChange = (index: number, value: string) => {
     const updatedSystemPrompts = [...project.systemPrompts];
-    updatedSystemPrompts[index] = value;
-    const updatedProject = {
-      ...project,
-      systemPrompts: updatedSystemPrompts,
-    };
-    setProject(updatedProject);
+    if (updatedSystemPrompts?.[index]) {
+      console.log(updatedSystemPrompts);
+      updatedSystemPrompts[index].title = value;
+      const updatedProject = {
+        ...project,
+        systemPrompts: updatedSystemPrompts,
+      };
+      setProject(updatedProject);
+    }
+  };
+
+  const handleSystemPromptBodyChange = (index: number, value: string) => {
+    const updatedSystemPrompts = [...project.systemPrompts];
+    if (updatedSystemPrompts?.[index]) {
+      updatedSystemPrompts[index].body = value;
+      const updatedProject = {
+        ...project,
+        systemPrompts: updatedSystemPrompts,
+      };
+      setProject(updatedProject);
+    }
   };
 
   const addSystemPrompt = () => {
-    const updatedProject: Project = {
+    const updatedProject: ProjectBody = {
       ...project,
-      systemPrompts: [...project.systemPrompts, ""],
+      systemPrompts: [...project.systemPrompts, { title: "", body: "" }],
     };
     setProject(updatedProject);
   };
@@ -74,34 +91,52 @@ function Prompts({ project, setProject }: Props) {
         </CardHeader>
         <CardContent>
           {project.systemPrompts.map((prompt, index) => (
-            <div key={index}>
-              <Label
-                htmlFor={`systemPrompt-${index}`}
-                // className="block text-sm font-medium text-gray"
-              >
-                System Prompt {index + 1}
-              </Label>
-
-              <div className="flex flex-col items-end gap-1">
-                <textarea
-                  id={`systemPrompt-${index}`}
-                  className="h-22 min-h-14 w-full rounded-md border border-gray-300 p-2 text-sm text-slate-700"
-                  value={prompt}
+            <div key={index} className="flex w-full items-start gap-8">
+              <h6 className="mb-1 text-gray-800">{index + 1}.</h6>
+              <div className="flex w-full flex-col gap-2">
+                <Label
+                  htmlFor={`systemPromptTitle-${index}`}
+                  // className="block text-sm font-medium text-gray"
+                >
+                  Title
+                </Label>
+                <input
+                  id={`systemPromptTitle-${index}`}
+                  className="mb-1 w-full rounded-md border border-gray-300 p-2 text-sm text-slate-700"
+                  value={prompt.title}
                   onChange={(e) =>
-                    handleSystemPromptChange(index, e.target.value)
+                    handleSystemPromptTitleChange(index, e.target.value)
                   }
                 />
-                {project.systemPrompts.length > 1 && (
-                  <div className="flex h-full items-center">
-                    <button
-                      type="button"
-                      onClick={() => deleteSystemPrompt(index)}
-                      className="text-slate-500 transition-all hover:text-red-700"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                )}
+
+                <Label
+                  htmlFor={`systemPromptTitle-${index}`}
+                  // className="block text-sm font-medium text-gray"
+                >
+                  Body
+                </Label>
+
+                <div className="flex flex-col items-end gap-1">
+                  <textarea
+                    id={`systemPrompt-${index}`}
+                    className="h-22 min-h-14 w-full rounded-md border border-gray-300 p-2 text-sm text-slate-700"
+                    value={prompt.body}
+                    onChange={(e) =>
+                      handleSystemPromptBodyChange(index, e.target.value)
+                    }
+                  />
+                  {project.systemPrompts.length > 1 && (
+                    <div className="flex h-full items-center">
+                      <button
+                        type="button"
+                        onClick={() => deleteSystemPrompt(index)}
+                        className="text-slate-500 transition-all hover:text-red-700"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ))}

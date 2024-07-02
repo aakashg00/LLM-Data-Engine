@@ -14,10 +14,10 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
 import { toast } from "react-hot-toast";
-import Layout from "./Layout";
 import { Textarea } from "~/components/ui/textarea";
-import { HelpCircle, MessageCircleQuestion, Plus } from "lucide-react";
+import { HelpCircle, Plus } from "lucide-react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 export type DashboardProject = {
   id: string;
@@ -37,10 +37,12 @@ function DashboardHome() {
 
   const loading = useRef<boolean>(true);
 
+  const { status, data: session } = useSession();
+
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch("/api/projects");
+        const response = await fetch(`/api/users/${session?.user.id}/projects`);
         if (!response.ok) {
           throw new Error("Failed to fetch projects");
         }
@@ -51,7 +53,7 @@ function DashboardHome() {
       }
     };
 
-    if (projects === null && loading.current) {
+    if (projects === null && loading.current && session?.user?.id) {
       loading.current = false;
       void toast.promise(fetchProjects(), {
         loading: "Loading projects...",
@@ -59,7 +61,7 @@ function DashboardHome() {
         error: (err: Error) => <p>{err.message}</p>,
       });
     }
-  }, [projects]);
+  }, [projects, session, session?.user.id]);
 
   const handleClickedSubmit = async (project?: Project) => {
     try {
@@ -76,7 +78,8 @@ function DashboardHome() {
       if (secretKey === "") {
         throw new Error("Please enter your secret key.");
       }
-      const response = await fetch("/api/projects", {
+
+      const response = await fetch(`/api/users/${session?.user.id}/projects`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -219,7 +222,7 @@ function DashboardHome() {
                     </Link>
                   </Label>
                   <Input
-                    type="text"
+                    type="password"
                     name="secretkey"
                     id="secretkey"
                     className="col-span-3 -mt-2"
@@ -249,12 +252,12 @@ function DashboardHome() {
           {/* End Page Header  */}
           {projects && projects.length > 0 ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
-              {(projects ?? []).map((project) => (
-                <ProjectTile key={project.id} project={project} />
+              {(projects ?? []).map((project, index) => (
+                <ProjectTile key={index} project={project} />
               ))}
             </div>
           ) : (
-            !loading && (
+            !loading.current && (
               <div className="flex justify-center">
                 <h2 className="flex items-center pt-12 text-3xl">
                   Create your first project!

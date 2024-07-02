@@ -39,9 +39,6 @@ function TwoOptions(props: Props) {
   const [oneText, setOneText] = useState<string | undefined>("");
   const [twoText, setTwoText] = useState<string | undefined>("");
 
-  const lastLFGenerationIdOne = useRef<string | null>(null);
-  const lastLFGenerationIdTwo = useRef<string | null>(null);
-
   const { messages, isLoading, setMessages, reload } = useChat({
     id: props.sessionId + "1",
   });
@@ -71,7 +68,6 @@ function TwoOptions(props: Props) {
     setMessage2Index(-2);
     await addResponses(oneText ?? "", twoText ?? "", true, false);
     props.selectOneText(messages?.at(-1)?.content);
-    console.log(lastLFGenerationIdOne.current);
   }
 
   async function selectedTwo() {
@@ -80,7 +76,6 @@ function TwoOptions(props: Props) {
     setMessage2Index(-2);
     await addResponses(oneText ?? "", twoText ?? "", false, true);
     props.selectTwoText(messages2?.at(-1)?.content);
-    console.log(lastLFGenerationIdTwo.current);
   }
 
   async function addResponses(
@@ -121,7 +116,6 @@ function TwoOptions(props: Props) {
 
   async function choseBothBad() {
     if (!isLoading && !isLoading2) {
-      setBothBadSelected(true);
       setBothBadCount((prevCount) => prevCount + 1);
       setIsModalOpen(true);
     }
@@ -129,8 +123,6 @@ function TwoOptions(props: Props) {
 
   async function submitFeedback() {
     await addResponses(oneText ?? "", twoText ?? "", false, false);
-
-    setIsModalOpen(false);
     if (bothBadCount >= 5) {
       setSessionEnded(true);
       props.tooManyRejections(feedback);
@@ -138,13 +130,16 @@ function TwoOptions(props: Props) {
     }
     setOneText("");
     setTwoText("");
-    setFeedback("");
+    setBothBadSelected(true);
+
     try {
       props.replaceBothMessages(feedback);
     } catch (error) {
       console.error("Error generating new responses", error);
       throw new Error("Error generating new responses.");
     }
+    setFeedback("");
+    setIsModalOpen(false);
   }
 
   useEffect(() => {
@@ -166,10 +161,10 @@ function TwoOptions(props: Props) {
   }, [messages2]);
 
   useEffect(() => {
-    if (isLoading || isLoading2) {
+    if (!isLoading && !isLoading2) {
       setBothBadSelected(false);
     }
-  }, [isLoading, isLoading2]);
+  }, [isLoading, isLoading2, isModalOpen]);
 
   return (
     <Card className="mx-auto flex w-full flex-col gap-1 p-4 dark:border-gray-700 dark:bg-slate-900 dark:shadow-slate-700/[.7] md:p-5">

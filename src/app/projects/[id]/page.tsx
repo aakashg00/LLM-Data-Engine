@@ -3,13 +3,34 @@
 import React, { useState, useEffect, useRef } from "react";
 import Layout from "~/app/_components/Dashboard/Layout";
 import { toast } from "react-hot-toast";
-import { Project } from "@prisma/client";
+import type { Project } from "@prisma/client";
 import ProjectDetails from "~/app/_components/Project/ProjectDetails";
-import DialogueTable from "~/app/_components/Project/DialogueTable";
 import Prompts from "~/app/_components/Project/Prompts";
+import pageAccessHOC from "~/app/_components/PageAccess";
+import type { AnnotationType } from "~/app/_components/Annotate/AnnotatePage";
+export interface SystemPrompt {
+  title: string;
+  body: string;
+}
+
+export interface User {
+  name: string;
+  email: string;
+}
+
+export interface ProjectBody {
+  id: string;
+  name: string;
+  description: string;
+  instructions: string;
+  annotation: AnnotationType;
+  systemPrompts: SystemPrompt[];
+  users: User[];
+  // tags: TagNoID[];
+}
 
 function ProjectPage({ params }: { params: { id: string } }) {
-  const [project, setProject] = useState<Project | null>(null);
+  const [project, setProject] = useState<ProjectBody | null>(null);
   type PageType = "details" | "prompts";
   const [curPage, setCurPage] = useState<PageType>("details");
   const loading = useRef<boolean>(true);
@@ -21,7 +42,7 @@ function ProjectPage({ params }: { params: { id: string } }) {
         if (!response.ok) {
           throw new Error("Failed to fetch project");
         }
-        const data = (await response.json()) as Project;
+        const data = (await response.json()) as ProjectBody;
         setProject(data);
       } catch (error) {
         console.error("Error fetching project:", error);
@@ -63,7 +84,7 @@ function ProjectPage({ params }: { params: { id: string } }) {
                   ? " border bg-white shadow-sm transition-all"
                   : " text-gray-700")
               }
-              key={0}
+              key={1}
               onClick={() => setCurPage("prompts")}
             >
               Prompts
@@ -85,4 +106,4 @@ function ProjectPage({ params }: { params: { id: string } }) {
   );
 }
 
-export default ProjectPage;
+export default pageAccessHOC(ProjectPage);

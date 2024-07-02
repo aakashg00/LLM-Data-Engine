@@ -3,6 +3,7 @@
 import React from "react";
 import Layout from "../_components/Dashboard/Layout";
 import PromptsPage from "../_components/PromptsPage";
+import pageAccessHOC from "../_components/PageAccess";
 
 function Prompts() {
   return (
@@ -14,4 +15,4 @@ function Prompts() {
   );
 }
 
-export default Prompts;
+export default pageAccessHOC(Prompts);

@@ -3,6 +3,7 @@
 import React from "react";
 import DashboardHome from "../_components/Dashboard/DashboardHome";
 import Layout from "../_components/Dashboard/Layout";
+import pageAccessHOC from "../_components/PageAccess";
 
 function DashboardPage() {
   return (
@@ -14,4 +15,4 @@ function DashboardPage() {
   );
 }
 
-export default DashboardPage;
+export default pageAccessHOC(DashboardPage);

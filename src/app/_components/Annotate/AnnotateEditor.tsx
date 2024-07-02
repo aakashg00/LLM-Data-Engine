@@ -27,8 +27,10 @@ type Props = {
   ) => void;
 };
 
-function groupByTag(annotations: AnnotateBlendTag[]) {
-  return annotations.reduce(
+function groupByTag(
+  annotations: AnnotateBlendTag[],
+): Record<string, { start: number; end: number; text?: string }[]> {
+  const groupedAnnotations = annotations.reduce(
     (acc, annotation) => {
       const { tag, start, end, text } = annotation;
 
@@ -44,6 +46,15 @@ function groupByTag(annotations: AnnotateBlendTag[]) {
     },
     {} as Record<string, { start: number; end: number; text?: string }[]>,
   );
+
+  // Sort annotations by start index for each tag
+  for (const tag in groupedAnnotations) {
+    if (groupedAnnotations.hasOwnProperty(tag) && groupedAnnotations[tag]) {
+      groupedAnnotations[tag].sort((a, b) => a.start - b.start);
+    }
+  }
+
+  return groupedAnnotations;
 }
 
 export default function AnnotateEditor({ text, submit }: Props) {
@@ -140,13 +151,11 @@ export default function AnnotateEditor({ text, submit }: Props) {
             </button>
           </PopoverTrigger>
 
-          <PopoverContent className="w-80">
-            <div>
-              {/* {JSON.stringify(groupByTag(value), null, 2)} */}
-
+          <PopoverContent className="min-w-80">
+            <div className="flex flex-col gap-4 p-1">
               {Object.keys(groupByTag(value)).length > 0 ? (
                 Object.keys(groupByTag(value)).map((tag) => (
-                  <div key={tag} style={{ marginBottom: "16px" }}>
+                  <div key={tag}>
                     <div className="flex items-center gap-2">
                       <div
                         style={{

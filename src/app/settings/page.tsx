@@ -3,6 +3,7 @@
 import React from "react";
 import Layout from "../_components/Dashboard/Layout";
 import SettingsPage from "../_components/SettingsPage";
+import pageAccessHOC from "../_components/PageAccess";
 
 function Settings() {
   return (
@@ -14,4 +15,4 @@ function Settings() {
   );
 }
 
-export default Settings;
+export default pageAccessHOC(Settings);

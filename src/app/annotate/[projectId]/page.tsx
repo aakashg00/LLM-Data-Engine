@@ -1,12 +1,10 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import AnnotatePage from "~/app/_components/Annotate/AnnotatePage";
-import type { Project } from "@prisma/client";
 import type { AnnotationType } from "~/app/_components/Annotate/AnnotatePage";
 import SystemPromptForm from "~/app/_components/Annotate/SystemPromptForm";
 import { Card } from "~/components/ui/card";
-import { ScrollArea, ScrollBar } from "~/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
@@ -15,19 +13,40 @@ import {
   SheetTrigger,
 } from "~/components/ui/sheet";
 import { Button } from "~/components/ui/button";
-import { ChevronsUpDown, Info, Minus, Plus } from "lucide-react";
+import {
+  BookOpenText,
+  Check,
+  CheckCircle,
+  CheckCircle2,
+  ChevronsUpDown,
+  Info,
+  MinusCircle,
+  RefreshCw,
+} from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
+import pageAccessHOC from "~/app/_components/PageAccess";
+import { useSession, signOut } from "next-auth/react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "~/components/ui/popover";
+import type { ProjectBody, SystemPrompt } from "~/app/projects/[id]/page";
 
 function Annotate({ params }: { params: { projectId: string } }) {
-  const [project, setProject] = useState<Project | null>(null);
-  const [systemPrompts, setSystemPrompts] = useState<string[]>([]);
+  const [project, setProject] = useState<ProjectBody | null>(null);
+  const [systemPrompts, setSystemPrompts] = useState<SystemPrompt[]>([]);
   const [activeIndex, setActiveIndex] = useState<number>(0);
   const [annotatePages, setAnnotatePages] = useState<JSX.Element[]>([]);
   const [pageClicked, setPageClicked] = useState<boolean[]>([]);
+  const [resetCounter, setResetCounter] = useState<number[]>([]);
+  const [sessionEnded, setSessionEnded] = useState<boolean[]>([]);
+
+  const { data: session } = useSession();
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -36,10 +55,12 @@ function Annotate({ params }: { params: { projectId: string } }) {
         if (!response.ok) {
           throw new Error("Failed to fetch project");
         }
-        const data = (await response.json()) as Project;
+        const data = (await response.json()) as ProjectBody;
         setProject(data);
         setSystemPrompts(data.systemPrompts);
         const clickedArray = Array(data.systemPrompts.length).fill(false);
+        setResetCounter(Array(data.systemPrompts.length).fill(0) as number[]);
+        setSessionEnded(Array(data.systemPrompts.length).fill(false));
         if (clickedArray.length > 0) {
           clickedArray[0] = true;
           setPageClicked(clickedArray);
@@ -61,17 +82,20 @@ function Annotate({ params }: { params: { projectId: string } }) {
     if (project && project !== undefined && systemPrompts.length > 0) {
       const pages = systemPrompts.map((prompt, index) => (
         <AnnotatePage
-          key={index}
+          key={`${index}-${resetCounter[index]}`}
           idx={index}
           pageClicked={pageClicked}
           type={project.annotation as AnnotationType}
-          prompt={prompt}
+          promptBody={prompt.body}
           projectId={params.projectId}
+          userId={session?.user.id ?? ""}
+          resetConversation={incrementAtIndex}
+          setSessionEnded={setSessionEnded}
         />
       ));
       setAnnotatePages(pages);
     }
-  }, [systemPrompts, activeIndex, project, params.projectId]);
+  }, [systemPrompts, activeIndex, project, params.projectId, resetCounter]);
 
   const handleStepClick = (index: number) => {
     setPageClicked((prevPageClicked) => {
@@ -84,6 +108,21 @@ function Annotate({ params }: { params: { projectId: string } }) {
     setActiveIndex(index);
   };
 
+  const incrementAtIndex = (index: number) => {
+    setSessionEnded((prevState) => {
+      const updatedState = [...prevState];
+      updatedState[index] = false;
+      return updatedState;
+    });
+    setResetCounter((prevResetCounter) => {
+      const updatedCounter = [...prevResetCounter] as number[];
+      if (updatedCounter[index] !== undefined) {
+        updatedCounter[index] += 1;
+      }
+      return updatedCounter;
+    });
+  };
+
   const [submitInstrs, setSubmitInstrs] = useState<boolean>(false);
 
   const [isOpen, setIsOpen] = useState<boolean>(true);
@@ -93,7 +132,36 @@ function Annotate({ params }: { params: { projectId: string } }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="relative min-h-screen bg-gray-50 py-12">
+      <Popover>
+        <PopoverTrigger asChild>
+          <img
+            src={session?.user.image ?? ""}
+            alt="User"
+            className="fixed right-5 top-5 h-10 w-10 cursor-pointer rounded-full border border-gray-300 transition-all hover:opacity-70"
+          />
+        </PopoverTrigger>
+
+        <PopoverContent className="flex max-w-56 flex-col gap-3">
+          <span>
+            <p className="max-w-36 overflow-x-scroll text-sm font-bold text-gray-700 dark:text-neutral-200">
+              {session?.user.name}
+            </p>
+            <p className="max-w-36 overflow-x-scroll text-xs text-gray-500 dark:text-neutral-500">
+              {session?.user.email}
+            </p>
+          </span>
+
+          <hr></hr>
+          <p
+            onClick={() => signOut()}
+            className="cursor-pointer text-center text-xs font-semibold text-gray-700 hover:text-red-600"
+          >
+            Sign out
+          </p>
+        </PopoverContent>
+      </Popover>
+
       {project &&
         (!submitInstrs ? (
           <>
@@ -125,7 +193,7 @@ function Annotate({ params }: { params: { projectId: string } }) {
                       <div key={index} className="flex flex-col gap-1">
                         <li
                           className={
-                            "w-full cursor-pointer rounded-md p-2 transition-all" +
+                            "flex h-10 max-h-10 min-h-10 w-full cursor-pointer items-center justify-between overflow-x-scroll whitespace-nowrap rounded-md p-2 transition-all" +
                             (activeIndex === index
                               ? " bg-blue-600 text-white hover:bg-blue-600"
                               : " hover:bg-gray-100")
@@ -133,7 +201,12 @@ function Annotate({ params }: { params: { projectId: string } }) {
                           key={index}
                           onClick={() => handleStepClick(index)}
                         >
-                          Question {index + 1}
+                          {`${index + 1}. ${prompt.title}`}
+                          {sessionEnded[index] ? (
+                            <Check className="text-green-600" size={16} />
+                          ) : (
+                            <MinusCircle className="text-red-600" size={16} />
+                          )}
                         </li>
                         <hr className="w-11/12 self-center"></hr>
                       </div>
@@ -147,7 +220,9 @@ function Annotate({ params }: { params: { projectId: string } }) {
               {annotatePages.map((page, index) => (
                 <div
                   key={index}
-                  style={{ display: index === activeIndex ? "block" : "none" }}
+                  style={{
+                    display: index === activeIndex ? "block" : "none",
+                  }}
                 >
                   {page}
                 </div>
@@ -155,9 +230,9 @@ function Annotate({ params }: { params: { projectId: string } }) {
             </div>
             <Sheet>
               <SheetTrigger asChild>
-                <Info
+                <BookOpenText
                   size={24}
-                  className="fixed right-5 top-5 cursor-pointer rounded-full text-gray-600 transition-all hover:opacity-70"
+                  className="fixed right-20 top-5 h-10 w-10 cursor-pointer p-1 text-gray-600 transition-all hover:opacity-70"
                 />
               </SheetTrigger>
               <SheetContent>
@@ -173,4 +248,4 @@ function Annotate({ params }: { params: { projectId: string } }) {
   );
 }
 
-export default Annotate;
+export default pageAccessHOC(Annotate);

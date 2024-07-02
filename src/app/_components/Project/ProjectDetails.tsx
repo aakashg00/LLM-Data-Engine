@@ -19,35 +19,35 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "~/components/ui/table";
 import { useRouter } from "next/navigation";
 
 import type { Project, Tag } from "@prisma/client";
 import toast from "react-hot-toast";
-import { Link2, Clipboard, Check } from "lucide-react";
+import { Link2, Clipboard, Check, Trash2 } from "lucide-react";
 import { useState, useRef } from "react";
 
 import type { AnnotationType } from "../Annotate/AnnotatePage";
 import TagSelect, { TagNoID } from "./TagSelect";
 import { router } from "@trpc/server";
-
-export interface ProjectBody {
-  id: string;
-  createdAt: Date;
-  name: string;
-  description: string;
-  instructions: string;
-  annotation: AnnotationType;
-  systemPrompts: string[];
-  // tags: TagNoID[];
-}
+import pageAccessHOC from "../PageAccess";
+import type { ProjectBody } from "~/app/projects/[id]/page";
+import { Badge } from "~/components/ui/badge";
 interface Props {
-  project: Project;
-  setProject: React.Dispatch<React.SetStateAction<Project | null>>;
+  project: ProjectBody;
+  setProject: React.Dispatch<React.SetStateAction<ProjectBody | null>>;
 }
 
 const ProjectDetails: React.FC<Props> = ({ project, setProject }: Props) => {
   const updateName = (newName: string) => {
-    const updatedProject: Project = { ...project, name: newName };
+    const updatedProject: ProjectBody = { ...project, name: newName };
     setProject(updatedProject);
   };
 
@@ -221,7 +221,7 @@ const ProjectDetails: React.FC<Props> = ({ project, setProject }: Props) => {
               <div className="grid gap-1.5 leading-none">
                 <label
                   htmlFor="edit"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  className="cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                   Edit text
                 </label>
@@ -239,7 +239,7 @@ const ProjectDetails: React.FC<Props> = ({ project, setProject }: Props) => {
               <div className="grid gap-1.5 leading-none">
                 <label
                   htmlFor="tag"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  className="cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                   Tag text
                 </label>
@@ -312,6 +312,67 @@ const ProjectDetails: React.FC<Props> = ({ project, setProject }: Props) => {
       </Card>
       <Card>
         <CardHeader>
+          <CardTitle>Access Control</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col items-end gap-3">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Collaborator</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {project.users.map((user, index) => (
+                <TableRow key={index} className="bg-accent">
+                  <TableCell>
+                    <div className="font-medium">{user.name}</div>
+                    <div className="hidden text-sm text-muted-foreground md:inline">
+                      {user.email}
+                    </div>
+                  </TableCell>
+
+                  {index >= 0 && (
+                    <TableCell className="hidden sm:table-cell">
+                      <Trash2 className="float-right" />
+                    </TableCell>
+                  )}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          <Dialog>
+            <DialogTrigger>
+              <Button className="">Add a collaborator</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add a collaborator.</DialogTitle>
+              </DialogHeader>
+              <div className="flex flex-col">
+                <Label htmlFor="collaboratorEmail" className="text-gray-700">
+                  Email
+                </Label>
+              </div>
+              <div className="w-full">
+                <Input
+                  type="email"
+                  name="collaboratorEmail"
+                  id="collaboratorEmail"
+                  className="min-w-full px-2 "
+                  value={project.name}
+                  onChange={(e) => updateName(e.target.value)}
+                />
+              </div>
+              <DialogFooter>
+                <Button>Add</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
           <CardTitle className="flex items-center justify-between">
             Delete Project
             <Dialog>
@@ -325,10 +386,8 @@ const ProjectDetails: React.FC<Props> = ({ project, setProject }: Props) => {
                   <DialogTitle className="mb-1">
                     Are you sure you want to delete?
                   </DialogTitle>
-                  <DialogDescription>
-                    <p className="mb-2">
-                      Deleting a project is final and cannot be undone.
-                    </p>
+                  <DialogDescription className="mb-2">
+                    Deleting a project is final and cannot be undone.
                   </DialogDescription>
                 </DialogHeader>
 
@@ -350,4 +409,4 @@ const ProjectDetails: React.FC<Props> = ({ project, setProject }: Props) => {
   );
 };
 
-export default ProjectDetails;
+export default pageAccessHOC(ProjectDetails);

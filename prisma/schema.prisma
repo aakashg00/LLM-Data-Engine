@@ -14,18 +14,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  createdBy   User   @relation(fields: [createdById], references: [id])
-  createdById String
-
-  @@index([name])
-}
-
 // Necessary for Next auth
 model Account {
   id                String  @id @default(cuid())
@@ -61,8 +49,8 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
-  posts         Post[]
-  Message       Message[]
+  projects      Project[]  @relation("UserProjects")
+  Messages      Message[]
 }
 
 model VerificationToken {
@@ -93,13 +81,41 @@ model Project {
 
   conversations Conversation[]
 
-  systemPrompts String[]
+  systemPrompts SystemPrompt[]
 
   tags          Tag[]
+
+  users         User[]      @relation("UserProjects")
+
+  allowedEmails AllowedEmail[]
+  accessType    AccessType @default(EMAIL_ONLY)
 
   // Langfuse
   publicKey     String      /// @encrypted
   secretKey     String      /// @encrypted
+}
+
+enum AccessType {
+  ANYONE
+  EMAIL_ONLY
+}
+
+model AllowedEmail {
+  id        String   @id @default(cuid())
+  email     String
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+
+  @@unique([email, projectId])
+}
+
+model SystemPrompt {
+  id      String   @id @default(cuid())
+  title   String
+  body    String
+
+  project Project  @relation(fields: [projectId], references: [id])
+  projectId String
 }
 
 model Tag {

@@ -19,15 +19,26 @@ import type { Langfuse } from "langfuse";
 import toast from "react-hot-toast";
 import { userAgent } from "next/server";
 import TextAnnotateWrapper from "./TextAnnotateWrapper";
+import { Button } from "~/components/ui/button";
+import { Info, RefreshCw } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
 
 export type AnnotationType = "EDIT" | "TAG" | "BOTH";
 
 interface Props {
-  prompt: string;
+  promptBody: string;
   projectId: string;
   type: AnnotationType;
   idx: number;
   pageClicked: boolean[];
+  userId: string;
+  resetConversation: (index: number) => void;
+  setSessionEnded: React.Dispatch<React.SetStateAction<boolean[]>>;
 }
 
 function AnnotatePage(props: Props) {
@@ -168,7 +179,6 @@ function AnnotatePage(props: Props) {
       })
         .then((response) => response.json() as Promise<{ id: string }>)
         .then((responseData) => {
-          console.log(responseData);
           convoIdRef.current = responseData.id;
         });
     } catch (error) {
@@ -203,9 +213,10 @@ function AnnotatePage(props: Props) {
         name: "my-trace",
         input: {
           role: "system",
-          content: props.prompt,
+          content: props.promptBody,
         },
         sessionId: sessionId.current,
+        userId: props.userId,
         projectId: props.projectId,
       }),
     });
@@ -245,7 +256,7 @@ function AnnotatePage(props: Props) {
       append(
         {
           role: "system",
-          content: props.prompt,
+          content: props.promptBody,
         },
         {
           options: {
@@ -260,7 +271,7 @@ function AnnotatePage(props: Props) {
       append2(
         {
           role: "system",
-          content: props.prompt,
+          content: props.promptBody,
         },
         {
           options: {
@@ -417,6 +428,34 @@ function AnnotatePage(props: Props) {
   }
 
   async function replaceBothMessages(feedback: string) {
+    await Promise.all([
+      fetch("/api/langfuse/generation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: latestGen1Id.current,
+          traceId: latestTraceId.current,
+          statusMessage: "not selected",
+          metadata: { selected: "false" },
+          projectId: props.projectId,
+        }),
+      }),
+      fetch("/api/langfuse/generation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: latestGen2Id.current,
+          traceId: latestTraceId.current,
+          statusMessage: "not selected",
+          metadata: { selected: "false" },
+          projectId: props.projectId,
+        }),
+      }),
+    ]);
     await fetch("/api/langfuse/event", {
       method: "POST",
       headers: {
@@ -431,33 +470,6 @@ function AnnotatePage(props: Props) {
       }),
     });
 
-    await fetch("/api/langfuse/generation", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        id: latestGen1Id.current,
-        traceId: latestTraceId.current,
-        statusMessage: "not selected",
-        metadata: { selected: "false" },
-        projectId: props.projectId,
-      }),
-    });
-
-    await fetch("/api/langfuse/generation", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        id: latestGen2Id.current,
-        traceId: latestTraceId.current,
-        statusMessage: "not selected",
-        metadata: { selected: "false" },
-        projectId: props.projectId,
-      }),
-    });
     const spanResponse = await fetch("/api/langfuse/span", {
       method: "POST",
       headers: {
@@ -515,6 +527,7 @@ function AnnotatePage(props: Props) {
         id: latestTraceId.current,
         metadata: { tooManyRejections: true },
         tags: ["rejected"],
+        userId: props.userId,
         projectId: props.projectId,
       }),
     });
@@ -632,6 +645,7 @@ function AnnotatePage(props: Props) {
             body: JSON.stringify({
               id: latestTraceId.current,
               output: { role: newMessage.role, content: newMessage.content },
+              userId: props.userId,
               projectId: props.projectId,
             }),
           });
@@ -692,6 +706,7 @@ function AnnotatePage(props: Props) {
         body: JSON.stringify({
           id: latestTraceId.current,
           output: { role: newMessage.role, content: newMessage.content },
+          userId: props.userId,
           projectId: props.projectId,
         }),
       });
@@ -721,6 +736,7 @@ function AnnotatePage(props: Props) {
               id: latestTraceId.current,
               tags: ["edited"],
               metadata: { edited: true },
+              userId: props.userId,
               projectId: props.projectId,
             }),
           }),
@@ -802,6 +818,7 @@ function AnnotatePage(props: Props) {
         name: "my-trace",
         input: { role: "user", content: text },
         sessionId: sessionId.current,
+        userId: props.userId,
         projectId: props.projectId,
       }),
     });
@@ -879,11 +896,42 @@ function AnnotatePage(props: Props) {
   }
 
   function submitUserEnd() {
+    props.setSessionEnded((prevState) => {
+      const updatedState = [...prevState];
+      updatedState[props.idx] = true;
+      return updatedState;
+    });
+
     setAllComponents((prevComponents) => [
       ...prevComponents,
       <SessionEnded
         key={`session-ended-${allComponents.length}` + props.idx}
       />,
+      <Button
+        className="mx-auto flex items-center gap-2 font-semibold"
+        key={`reset-conversation-${allComponents.length}` + props.idx}
+        type="button"
+        onClick={() => props.resetConversation(props.idx)}
+      >
+        <RefreshCw size={16} />
+        Reset Conversation
+        <TooltipProvider
+          key={`reset-tooltip-${allComponents.length}` + props.idx}
+          delayDuration={200}
+        >
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info size={15} />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="font-normal">
+                Click to start a fresh interaction with the original system
+                prompt. The conversation above is saved and will be unaffected.
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </Button>,
     ]);
   }
 

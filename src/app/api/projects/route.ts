@@ -36,14 +36,3 @@ export async function POST(request: Request) {
     return NextResponse.error();
   }
 }
-
-export async function GET() {
-  try {
-    // await client.project.deleteMany({});
-    const projects = await client.project.findMany();
-    return NextResponse.json(projects);
-  } catch (error) {
-    console.error("Error fetching projects:", error);
-    return NextResponse.error();
-  }
-}

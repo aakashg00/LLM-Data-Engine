@@ -30,12 +30,11 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET() {
-  console.log("hi");
   try {
-    await client.aI_Response.deleteMany({});
-    await client.message.deleteMany({});
-    await client.conversation.deleteMany({});
-    await client.project.deleteMany({});
+    // await client.aI_Response.deleteMany({});
+    // await client.message.deleteMany({});
+    // await client.conversation.deleteMany({});
+    // await client.project.deleteMany({});
 
     const conversations = await client.conversation.findMany({
       include: {

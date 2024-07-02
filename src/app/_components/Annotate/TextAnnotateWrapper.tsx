@@ -26,8 +26,9 @@ function TextAnnotateWrapper({ text, submit }: Props) {
           Annotate the response.
         </h2>
         <p className="m-0 flex items-center gap-1 p-0 text-gray-500 dark:text-gray-400">
-          Choose tags from the dropdown menu and highlight relevant text.
-          <TooltipProvider>
+          Choose different tags from the dropdown menu and highlight relevant
+          text.
+          <TooltipProvider delayDuration={200}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Info

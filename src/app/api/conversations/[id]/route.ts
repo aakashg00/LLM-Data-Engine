@@ -41,16 +41,11 @@ export async function PATCH(
     // Extract the value of fiveRegens from the request body
     const { fiveRegens } = (await req.json()) as { fiveRegens: boolean };
 
-    console.log(id, fiveRegens);
-
     // Update the conversation in the database
     const updatedConversation = await client.conversation.update({
       where: { id },
       data: { fiveRegens },
     });
-
-    console.log(updatedConversation);
-
     // Return the updated conversation
     return NextResponse.json({ conversation: updatedConversation });
   } catch (error) {
