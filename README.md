@@ -12,7 +12,10 @@ Welcome! This is a free open-source tool for collecting AI conversation datasets
 
 ## Demo Video
 
-In this demo, I use the LLM Data Engine to collect data for training a model to behave as a helpful elementary school tutor. First, I create a project and link it to Langfuse. For demonstration, I act as an annotator and use the generated shareable link to have a mock conversation, acting as the student needing help and annotating/refining the AI's responses to train its behavior. Finally, I go to Langfuse to see the collected dataset, which can be used to fine-tune my model for my tutoring use case!
+In this demo, I use the LLM Data Engine to collect data for training a model to behave as a helpful elementary school tutor. 
+1. I create a project and link it to Langfuse.
+2. For demonstration, I act as an annotator, using the shareable link to simulate a conversation as a student and annotate/refine the AI responses.
+3. I go to Langfuse to see the collected dataset, which can be used to fine-tune my model for my tutoring use case!
 
 https://github.com/user-attachments/assets/e38a473a-fda0-40eb-84dc-f25e163dd9fd
 
