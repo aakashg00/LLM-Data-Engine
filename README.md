@@ -1,41 +1,25 @@
-# Create T3 App With VS Code Dev Container
+# LLM Data Engine
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`. I added `.devcontainer` folder to make it easier to develop with VSCode and Docker.
+Welcome! This is a free open-source tool for collecting AI conversation datasets to fine-tune Large Language Models (LLMs) easily and effectively. Currently a **work in progress**.
 
-This repo assume you use T3 Stack with TypeScript + tRPC + Prisma + NextAuth.js + Tailwind CSS with PostgreSQL.
+## Features
 
-## Set Up
-1. [Install VS Code](https://code.visualstudio.com/)
-2. [Install Docker](https://code.visualstudio.com/docs/devcontainers/tutorial#_install-docker)
-3. [Install VS Code Dev Containers Extension](https://code.visualstudio.com/docs/devcontainers/tutorial#_install-the-extension)
-4. Clone this repository
-5. Copy `.env.example` to `.env` and fill in the necessary environment variables.
-    - For now, you need to fill in `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET` obtained from [Discord Developer Portal](https://discord.com/developers/applications).
-6. [Open this repository in a VS Code Dev Container](https://code.visualstudio.com/docs/devcontainers/containers#_quick-start-open-an-existing-folder-in-a-container)
-7. After the `postCreateCommand` - `npm install` is done, run `npm run db:push && npm run dev` to start the development server.
+- **Create Projects**: Kick things off by creating a project where you can configure the settings and system prompts for your project.
+  
+- **Link with Langfuse**: Connect your projects to Langfuse, an open-source LLM engineering platform that will be used to store conversation/annotation data and user interactions.
     
-## What's next? How do I make an app with this?
+- **Get Contributors**: Generate a shareable link for your project for human experts to have mock conversations and annotate AI responses, building you a tailored, high-quality dataset to help train your model!
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+## Demo Video
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+In this demo, I use the LLM Data Engine to collect data for training a model to behave as a helpful elementary school tutor. First, I create a project and link it to Langfuse. For demonstration, I act as an annotator and use the generated shareable link to have a mock conversation, acting as the student needing help and annotating/refining the AI's responses to train its behavior. Finally, I go to Langfuse to see the collected dataset, which can be used to fine-tune my model for my tutoring use case!
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+https://github.com/user-attachments/assets/e38a473a-fda0-40eb-84dc-f25e163dd9fd
 
-## Learn More
+## Join in!
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+If you have ideas, find bugs, or want to help build something the Data Engine, don’t hesitate to open an issue, submit a pull request, or directly reach out!
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+## Tech Stack
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
-
-## How do I deploy this?
-
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+This project uses TypeScript, Next.js, Prisma/PostgreSQL, NextAuth, and Tailwind CSS, along with the OpenAI and Langfuse API's.
