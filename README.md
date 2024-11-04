@@ -1,6 +1,6 @@
 # LLM Data Engine
 
-Welcome! This is a free open-source tool for collecting AI conversation datasets to fine-tune Large Language Models (LLMs) easily and effectively. Currently a **work in progress**.
+This is an open-source tool for collecting AI conversation datasets to fine-tune Large Language Models (LLMs) easily and effectively. Currently a **work in progress**.
 
 ## Features
 
